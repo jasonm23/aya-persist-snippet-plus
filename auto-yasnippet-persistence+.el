@@ -9,7 +9,9 @@
 ;;  really nice package for quickly creating yasnippets for immediate,
 ;;  throwaway use.  Much like Emacs kmacro features.
 
-;;  This package further automates the persist
+;;  This package further automates the persistence facility, to add
+;;  automatic saving, reloading into yasnippet for immediate use, auto 
+;;  group naming (optional), and more.
 
 ;;  Note: This package requires auto-yasnippet,
 
