@@ -40,8 +40,8 @@ persisted snippets."
                  (list
                   (read-from-minibuffer "Snippet name: ")
                   (read-from-minibuffer "Snippet key: ")
-                  (unless (equal current-prefix-arg nil)
-                    (read-string "Snippet group [leave blank for none]: ")))))
+                  (when current-prefix-arg
+                    (read-string "Snippet group [blank for none]: ")))))
   (catch 'exit-clause
     (when (eq aya-current "")
       (message "Aborting: You don't have a current auto-snippet defined.")
