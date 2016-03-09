@@ -14,6 +14,7 @@
 
 (require 'auto-yasnippet)
 
+;;;###autoload
 (defun aya-persist-snippet-plus ( name key &optional group)
   "Persist the current snippet, NAME KEY and GROUP can be provided by the user.
 The customizable variable, `aya-persist-snippets-dir' will be
@@ -26,7 +27,8 @@ sub-directory to store the snippet.
 
 For example, if you are in `c-mode`, the snippet will be saved to
 ~/.emacs.d/snippets/c/name, (assuming the default snippets dir.)
-When preceded by `universal-argument' you will be prompted to
+
+When preceded by `universal-argument' (C-u) you'll be prompted to
 supply a snippet group name.  See
 https://capitaomorte.github.io/yasnippet/snippet-development.html#sec-2-4
 for more on groups.
