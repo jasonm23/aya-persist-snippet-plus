@@ -1,17 +1,12 @@
-;;; auto-yasnippet-persistence+ -- persistence extension for auto-yasnippet
+;;; auto-yasnippet-persist-plus -- persistence extension for auto-yasnippet
 
 ;;; Author: Jason Milkins <jasonm23@gmail.com>
 
 ;;; Package-Requires: ((auto-yasnippet "0.3"))
 
 ;;; Commentary:
-;;  [Auto-yasnippet](https://github.com/abo-abo/auto-yasnippet) is a
-;;  really nice package for quickly creating yasnippets for immediate,
-;;  throwaway use.  Much like Emacs kmacro features.
 
-;;  This package further automates the persistence facility, to add
-;;  automatic saving, reloading into yasnippet for immediate use, auto 
-;;  group naming (optional), and more.
+;;      M-x describe-function RET aya-persist-snippet-plus
 
 ;;  Note: This package requires auto-yasnippet,
 
@@ -19,7 +14,7 @@
 
 (require 'auto-yasnippet)
 
-(defun auto-yasnippet-persistence-persist-snippet ( name key &optional group)
+(defun aya-persist-snippet-plus ( name key &optional group)
   "Persist the current snippet, NAME KEY and GROUP can be provided by the user.
 The customizable variable, `aya-persist-snippets-dir' will be
 used as the root directory for saving snippets.  You will need to
@@ -35,15 +30,16 @@ When preceded by `universal-argument' you will be prompted to
 supply a snippet group name.  See
 https://capitaomorte.github.io/yasnippet/snippet-development.html#sec-2-4
 for more on groups.
-It is necessary to use `yas/reload-all' to load/use newly
-persisted snippets. TODO: unless... (use hook)."
+
+Currently it is necessary to use `yas/reload-all' to load/use newly
+persisted snippets."
   (interactive (if (eq aya-current "")
                    (list nil nil nil)
                  (list
                   (read-from-minibuffer "Snippet name: ")
                   (read-from-minibuffer "Snippet key: ")
                   (unless (equal current-prefix-arg nil)
-                    (read-from-minibuffer "Snippet group (or leave blank): ")))))
+                    (read-string "Snippet group [leave blank for none]: ")))))
   (catch 'exit-clause
     (when (eq aya-current "")
       (message "Aborting: You don't have a current auto-snippet defined.")
@@ -78,6 +74,6 @@ persisted snippets. TODO: unless... (use hook)."
            name mode-snippets-dir)
         (append-to-file snippet nil snippet-filename)))))
 
-(provide 'auto-yasnippet-persistence+)
+(provide 'auto-yasnippet-persist-plus)
 
-;;; auto-yasnippet-persistence+.el ends here
+;;; auto-yasnippet-persist-plus.el ends here
