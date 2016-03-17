@@ -14,7 +14,7 @@ The current `major-mode` name will be used to determine the
 sub-directory to store the snippet.
 
 e.g. when in `c-mode`, a aya-snippet will be saved to
-~/.emacs.d/snippets/c/{key}
+`~/.emacs.d/snippets/c/{key}`
 
 When preceded by `universal-argument` you'll be prompted to
 supply a snippet group name.  See [documentation](https://capitaomorte.github.io/yasnippet/snippet-development.html#sec-2-4)
