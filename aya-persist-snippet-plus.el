@@ -1,40 +1,73 @@
-;;; auto-yasnippet-persist-plus -- persistence extension for auto-yasnippet
+;;; aya-persist-snippet-plus -- persistence extension for auto-yasnippet
 
 ;;; Author: Jason Milkins <jasonm23@gmail.com>
 
 ;;; Package-Requires: ((auto-yasnippet "0.3"))
 
 ;;; Commentary:
-
+;;
 ;;      M-x describe-function RET aya-persist-snippet-plus
-
-;;  Note: This package requires auto-yasnippet,
+;;
+;; ## Documentation
+;;
+;; Persist the current aya-snippet to a file, using KEY, GROUP and DESCRIPTION.
+;;
+;; The custom var, `aya-persist-snippets-dir' is used as root
+;; for saved snippets.  Yasnippet should also be configured
+;; to scan this directory.
+;;
+;; The current `major-mode` name will be used to determine the
+;; sub-directory to store the snippet.
+;;
+;; e.g. when in `c-mode`, a aya-snippet will be saved to
+;; ~/.emacs.d/snippets/c/{key}
+;;
+;; When preceded by `universal-argument' you'll be prompted to
+;; supply a snippet group name.  See
+;; https://capitaomorte.github.io/yasnippet/snippet-development.html#sec-2-4
+;; for more on groups.
+;;
+;; If preceded by double `universal-argument', you'll be
+;; prompted to supply a group and snippet description.
+;;
+;; Convenience functions to make group and or description mandatory,
+;; are included in this package.
+;;
+;; Set `aya-persist-snippets-autoreload' to non-nil to have new snippets
+;; available for use, immediately after saving.
 
 ;;; Code:
 
 (require 'auto-yasnippet)
 
 ;;;###autoload
-(defun aya-persist-snippet-plus ( name key &optional group)
-  "Persist the current snippet, NAME KEY and GROUP can be provided by the user.
-The customizable variable, `aya-persist-snippets-dir' will be
-used as the root directory for saving snippets.  You will need to
-ensure that yasnippet is also configured to scan this directory
-for snippets.
+(defun aya-persist-snippet-plus (key &optional group description)
+  "Persist the current aya-snippet to a file, using KEY, GROUP and DESCRIPTION.
 
-The current `major-mode` name will be used to determine the snippets
+The custom var, `aya-persist-snippets-dir' is used as root
+for saved snippets.  Yasnippet should also be configured
+to scan this directory.
+
+The current `major-mode` name will be used to determine the
 sub-directory to store the snippet.
 
-For example, if you are in `c-mode`, the snippet will be saved to
-~/.emacs.d/snippets/c/name, (assuming the default snippets dir.)
+e.g. when in `c-mode`, a aya-snippet will be saved to
+~/.emacs.d/snippets/c/{key}
 
-When preceded by `universal-argument' (C-u) you'll be prompted to
+When preceded by `universal-argument' you'll be prompted to
 supply a snippet group name.  See
 https://capitaomorte.github.io/yasnippet/snippet-development.html#sec-2-4
 for more on groups.
 
-Currently it is necessary to use `yas/reload-all' to load/use newly
-persisted snippets."
+If preceded by double `universal-argument', you'll be
+prompted to supply a group and snippet description.
+
+Convenience functions to make group and or description mandatory,
+are included in this package.
+
+Set `aya-persist-snippets-autoreload' to non-nil to have new snippets
+available for use, immediately after saving."
+
   (interactive (if (eq aya-current "")
                    (list nil nil nil)
                  (list
@@ -76,6 +109,6 @@ persisted snippets."
            name mode-snippets-dir)
         (append-to-file snippet nil snippet-filename)))))
 
-(provide 'auto-yasnippet-persist-plus)
+(provide 'aya-persist-snippet-plus)
 
-;;; auto-yasnippet-persist-plus.el ends here
+;;; aya-persist-snippet-plus.el ends here
