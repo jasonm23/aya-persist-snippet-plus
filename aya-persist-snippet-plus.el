@@ -39,9 +39,10 @@
 ;;; Code:
 
 (require 'auto-yasnippet)
+(require 'cl)
 
 ;;;###autoload
-(defun aya-persist-snippet-plus (key &optional group description)
+(defun* aya-persist-snippet-plus (key &optional group description)
   "Persist the current aya-snippet to a file, using KEY, GROUP and DESCRIPTION.
 
 The custom var, `aya-persist-snippets-dir' is used as root
@@ -71,14 +72,13 @@ available for use, immediately after saving."
   (interactive (if (eq aya-current "")
                    (list nil nil nil)
                  (list
-                  (read-from-minibuffer "Snippet name: ")
                   (read-from-minibuffer "Snippet key: ")
+                  (read-from-minibuffer "Snippet description: ")
                   (when current-prefix-arg
-                    (read-string "Snippet group [blank for none]: ")))))
-  (catch 'exit-clause
-    (when (eq aya-current "")
-      (message "Aborting: You don't have a current auto-snippet defined.")
-      (throw 'exit-clause nil))
+                    (read-string "Snippet group: ")))))
+    (unless (and (boundp 'aya-current) (not (eq aya-current "")))
+      (message "Aborting: You don't have a current auto-snippet defined")
+      (return-from aya-persist-snippet-plus))
     (let* ((snippet nil)
            (mode-snippets-dir nil)
            (snippet-filename nil)
@@ -88,7 +88,7 @@ available for use, immediately after saving."
            (mode-snippets-dir (format "%s/%s"
                                       snippet-dir modename))
            (snippet-filename (format "%s/%s.yasnippet"
-                                     mode-snippets-dir name)))
+                                     mode-snippets-dir key)))
       (if (eq group nil)
           (setq groupstring "")
         (setq groupstring (format  "# group: %s\n" group)))
@@ -98,9 +98,8 @@ available for use, immediately after saving."
                      "# contributor: %s\n"
                      "# name: %s\n"
                      groupstring
-                     "# key: %s\n"
                      "# --\n"
-                     "%s") user-full-name name key aya-current))
+                     "%s") user-full-name description aya-current))
       (unless (file-exists-p mode-snippets-dir)
         (make-directory mode-snippets-dir t))
       (if (file-exists-p snippet-filename)
