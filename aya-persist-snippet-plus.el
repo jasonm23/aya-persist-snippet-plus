@@ -2,15 +2,13 @@
 
 ;;; Author: Jason Milkins <jasonm23@gmail.com>
 
+;;; Version: 0.0.1
+
 ;;; Package-Requires: ((auto-yasnippet "0.3"))
 
 ;;; Commentary:
 ;;
-;;      M-x describe-function RET aya-persist-snippet-plus
-;;
-;; ## Documentation
-;;
-;; Persist the current aya-snippet to a file, using KEY, GROUP and DESCRIPTION.
+;; Persist the current aya-snippet to a file, using KEY, NAME and GROUP.
 ;;
 ;; The custom var, `aya-persist-snippets-dir' is used as root
 ;; for saved snippets.  Yasnippet should also be configured
@@ -19,31 +17,41 @@
 ;; The current `major-mode` name will be used to determine the
 ;; sub-directory to store the snippet.
 ;;
-;; e.g. when in `c-mode`, a aya-snippet will be saved to
+;; e.g. when in `c-mode' the current `aya-snippet' will be saved to
 ;; ~/.emacs.d/snippets/c/{key}
 ;;
 ;; When preceded by `universal-argument' you'll be prompted to
-;; supply a snippet group name.  See
+;; supply a snippet name.
+;;
+;; If twice preceded by `universal-argument', you'll also be
+;; prompted to supply a snippet group (ie.  ctrl-U twice)
+;;
+;; See:
 ;; https://capitaomorte.github.io/yasnippet/snippet-development.html#sec-2-4
 ;; for more on groups.
 ;;
-;; If preceded by double `universal-argument', you'll be
-;; prompted to supply a group and snippet description.
+;; Set `aya-persist-snippets-autoreload' as t to have new persisted snippets
+;; loaded immediately for use.
 ;;
-;; Convenience functions to make group and or description mandatory,
-;; are included in this package.
-;;
-;; Set `aya-persist-snippets-autoreload' to non-nil to have new snippets
-;; available for use, immediately after saving.
-
 ;;; Code:
 
 (require 'auto-yasnippet)
 (require 'cl)
 
 ;;;###autoload
-(defun* aya-persist-snippet-plus (key &optional group description)
-  "Persist the current aya-snippet to a file, using KEY, GROUP and DESCRIPTION.
+(defun aya-current-active-p ()
+  "When aya-current is active return t."
+  (and (boundp 'aya-current) (not (string= aya-current ""))))
+
+(defvar aya-last-persisted-snippet-file nil
+  "Path filename of the last persisted filename.")
+
+(defcustom aya-persist-snippets-autoreload t
+  "Automatic loading of new persisted auto yasnippets.")
+
+;;;###autoload
+(defun aya-persist-snippet-plus (key &optional name group)
+"Persist the current aya-snippet to a file, using KEY, NAME and GROUP.
 
 The custom var, `aya-persist-snippets-dir' is used as root
 for saved snippets.  Yasnippet should also be configured
@@ -52,62 +60,65 @@ to scan this directory.
 The current `major-mode` name will be used to determine the
 sub-directory to store the snippet.
 
-e.g. when in `c-mode`, a aya-snippet will be saved to
+e.g. when in `c-mode` the current `aya-snippet' will be saved to
 ~/.emacs.d/snippets/c/{key}
 
 When preceded by `universal-argument' you'll be prompted to
-supply a snippet group name.  See
+supply a snippet name.
+
+If twice preceded by `universal-argument', you'll also be
+prompted to supply a snippet group (ie.  ctrl-U twice)
+
+See:
 https://capitaomorte.github.io/yasnippet/snippet-development.html#sec-2-4
 for more on groups.
 
-If preceded by double `universal-argument', you'll be
-prompted to supply a group and snippet description.
+Set `aya-persist-snippets-autoreload' as t to have new persisted snippets
+loaded immediately for use."
+  (interactive (if (aya-current-active-p)
+                   (list
+                    (read-from-minibuffer "Snippet key: ")
+                    (when current-prefix-arg
+                      (read-from-minibuffer "Snippet name: "))
+                    (when (>= (prefix-numeric-value current-prefix-arg) 16)
+                      (read-from-minibuffer "Snippet group: ")))
+                 (list nil nil nil)))
+  (unless (aya-current-active-p)
+    (message "Aborting: You don't have a current auto-snippet defined") (return-from aya-persist-snippet-plus))
+  (let* ((snippet nil)
+         (groupstring nil)
+         (snippet-dir aya-persist-snippets-dir)
+         (mode-snippets-dir (format "%s/%s" snippet-dir major-mode))
+         (snippet-filename (format "%s/%s" mode-snippets-dir key)))
+    (setq snippet
+          (concat
+           "# -*- mode: snippet -*-\n"
+           (when user-full-name
+             (format "# contributor: %s\n" user-full-name))
+           (when name
+             (format "# name: %s\n" name))
+           (when group
+             (format  "# group: %s\n" group))
+           "# --\n"
+           aya-current))
+          (unless (file-exists-p mode-snippets-dir) (make-directory mode-snippets-dir t))
+          (if (file-exists-p snippet-filename)
+              (message "A snippet called %s already exists in %s, try again, using a different key." key mode-snippets-dir)
+            (progn (append-to-file snippet nil snippet-filename)
+                   (setq aya-current "") ;; reset the current autosnippet
+                   (setq aya-last-persisted-snippet-file snippet-filename)
+                   (when aya-persist-snippets-autoreload (yas-reload-all))))))
 
-Convenience functions to make group and or description mandatory,
-are included in this package.
+;;;###autoload
+  (defun* aya-persist-open-last-snippet ()
+    "Open the last persisted snippet in a buffer.
 
-Set `aya-persist-snippets-autoreload' to non-nil to have new snippets
-available for use, immediately after saving."
+Uses `aya-last-persisted-snippet-file'"
+    (interactive)
+    (when (string= aya-last-persisted-snippet-file "") (return-from aya-persist-snippet-open-last))
+    (let ((find-file-wildcards nil))
+      (find-file aya-last-persisted-snippet-file)))
 
-  (interactive (if (eq aya-current "")
-                   (list nil nil nil)
-                 (list
-                  (read-from-minibuffer "Snippet key: ")
-                  (read-from-minibuffer "Snippet description: ")
-                  (when current-prefix-arg
-                    (read-string "Snippet group: ")))))
-    (unless (and (boundp 'aya-current) (not (eq aya-current "")))
-      (message "Aborting: You don't have a current auto-snippet defined")
-      (return-from aya-persist-snippet-plus))
-    (let* ((snippet nil)
-           (mode-snippets-dir nil)
-           (snippet-filename nil)
-           (groupstring nil)
-           (snippet-dir aya-persist-snippets-dir)
-           (modename (format "%s" major-mode))
-           (mode-snippets-dir (format "%s/%s"
-                                      snippet-dir modename))
-           (snippet-filename (format "%s/%s.yasnippet"
-                                     mode-snippets-dir key)))
-      (if (eq group nil)
-          (setq groupstring "")
-        (setq groupstring (format  "# group: %s\n" group)))
-      (setq snippet
-            (format (concat
-                     "# -*- mode: snippet -*-\n"
-                     "# contributor: %s\n"
-                     "# name: %s\n"
-                     groupstring
-                     "# --\n"
-                     "%s") user-full-name description aya-current))
-      (unless (file-exists-p mode-snippets-dir)
-        (make-directory mode-snippets-dir t))
-      (if (file-exists-p snippet-filename)
-          (message
-           "A snippet called %s already exists in %s, try again, using a different name."
-           name mode-snippets-dir)
-        (append-to-file snippet nil snippet-filename)))))
-
-(provide 'aya-persist-snippet-plus)
+  (provide 'aya-persist-snippet-plus)
 
 ;;; aya-persist-snippet-plus.el ends here
