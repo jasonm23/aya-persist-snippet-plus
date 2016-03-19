@@ -49,6 +49,9 @@
 (defcustom aya-persist-snippets-autoreload t
   "Automatic loading of new persisted auto yasnippets.")
 
+(defcustom aya-contributor-name nil
+  "Contributor name for persisted snippets.")
+
 ;;;###autoload
 (defun aya-persist-snippet-plus (key &optional name group)
 "Persist the current aya-snippet to a file, using KEY, NAME and GROUP.
@@ -85,7 +88,8 @@ loaded immediately for use."
                  (list nil nil nil)))
   (unless (aya-current-active-p)
     (message "Aborting: You don't have a current auto-snippet defined") (return-from aya-persist-snippet-plus))
-  (let* ((snippet nil)
+  (let* ((user-full-name (or aya-contributor-name user-full-name))
+         (snippet nil)
          (groupstring nil)
          (snippet-dir aya-persist-snippets-dir)
          (mode-snippets-dir (format "%s/%s" snippet-dir major-mode))
